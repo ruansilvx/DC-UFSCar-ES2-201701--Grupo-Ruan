@@ -1,6 +1,6 @@
 package org.jabref.logic.sharelatex;
 
-import java.io.IOException;
+import java.net.URISyntaxException;
 
 import org.jabref.JabRefExecutorService;
 import org.jabref.logic.importer.ImportFormatPreferences;
@@ -13,7 +13,7 @@ import static org.mockito.Mockito.mock;
 public class SharelatexConnectorTest {
 
     @Test
-    public void test() throws IOException {
+    public void test() throws Exception {
         SharelatexConnector connector = new SharelatexConnector();
         connector.connectToServer("http://192.168.1.248", "joe@example.com", "test");
         connector.getProjects();
@@ -23,7 +23,12 @@ public class SharelatexConnectorTest {
 
         JabRefExecutorService.INSTANCE.executeAndWait(() -> {
 
-            connector.startWebsocketListener("", new BibDatabaseContext(), mock(ImportFormatPreferences.class));
+            try {
+                connector.startWebsocketListener("", new BibDatabaseContext(), mock(ImportFormatPreferences.class));
+            } catch (URISyntaxException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
         });
     }

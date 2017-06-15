@@ -29,6 +29,8 @@ public class WebSocketClientWrapper {
 
     private Session session;
     private String oldContent;
+    private int version;
+    private int commandCounter;
     private BibDatabaseContext newDb;
     private final ImportFormatPreferences prefs;
 
@@ -38,7 +40,7 @@ public class WebSocketClientWrapper {
         this.prefs = prefs;
     }
 
-    public void createAndConnect(String channel, String projectId, BibDatabaseContext database) {
+    public void createAndConnect(URI webSocketchannelUri, String projectId, BibDatabaseContext database) {
 
         try {
             this.newDb = database;
@@ -53,12 +55,11 @@ public class WebSocketClientWrapper {
                 public void onOpen(Session session, EndpointConfig config) {
                     session.addMessageHandler(String.class, (Whole<String>) message -> {
                         System.out.println("Received message: " + message);
-
                         parseContents(message);
 
                     });
                 }
-            }, cec, new URI("ws://192.168.1.248/socket.io/1/websocket/" + channel));
+            }, cec, webSocketchannelUri);
 
             database.getDatabase().registerListener(this);
 
@@ -113,6 +114,10 @@ public class WebSocketClientWrapper {
 
     }
 
+    public void sendHeartBeat() throws IOException {
+        session.getBasicRemote().sendText("2::");
+    }
+
     public void updateAsDeleteAndInsert(String docId, int position, int version, String oldContent, String newContent)
             throws IOException {
         ShareLatexJsonMessage message = new ShareLatexJsonMessage();
@@ -152,8 +157,6 @@ public class WebSocketClientWrapper {
             }
             if (message.contains("{\"name\":\"connectionAccepted\"}")) {
 
-                Thread.sleep(200);
-
                 joinProject("5936d96b1bd5906b0082f53c");
 
                 Thread.sleep(200);
@@ -167,7 +170,9 @@ public class WebSocketClientWrapper {
             if (message.startsWith("[null,[", ShareLatexParser.JSON_START_OFFSET)) {
                 System.out.println("Message could be an entry ");
 
+                version = parser.getVersionFromBibTexJsonString(message);
                 List<BibEntry> entries = parser.parseBibEntryFromJsonMessageString(message, prefs);
+
                 System.out.println("Got new entries");
 
             }

@@ -1,6 +1,7 @@
 package org.jabref.logic.sharelatex;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +19,7 @@ public class ShareLatexManager {
     private final SharelatexConnector connector = new SharelatexConnector();
     private final List<ShareLatexProject> projects = new ArrayList<>();
 
-    public String login(String server, String username, String password) throws IOException {
+    public String login(String server, String username, String password) throws IOException, URISyntaxException {
         return connector.connectToServer(server, username, password);
     }
 
@@ -58,7 +59,12 @@ public class ShareLatexManager {
             ImportFormatPreferences preferences) {
         JabRefExecutorService.INSTANCE.executeAndWait(() -> {
 
-            connector.startWebsocketListener(projectID, database, preferences);
+            try {
+                connector.startWebsocketListener(projectID, database, preferences);
+            } catch (URISyntaxException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         });
     }
 }

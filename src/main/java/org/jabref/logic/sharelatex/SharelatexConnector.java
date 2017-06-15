@@ -2,6 +2,8 @@ package org.jabref.logic.sharelatex;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -14,6 +16,7 @@ import org.jabref.model.database.BibDatabaseContext;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.http.client.utils.URIBuilder;
 import org.json.JSONObject;
 import org.jsoup.Connection;
 import org.jsoup.Connection.Method;
@@ -32,9 +35,9 @@ public class SharelatexConnector {
     private String csrfToken;
     private String projectUrl;
 
-    public String connectToServer(String server, String user, String password) throws IOException {
+    public String connectToServer(String serverUri, String user, String password) throws IOException {
 
-        this.server = server;
+        this.server = serverUri;
         this.loginUrl = server + "/login";
         Connection.Response crsfResponse;
 
@@ -104,7 +107,8 @@ public class SharelatexConnector {
         return Optional.empty();
     }
 
-    public void startWebsocketListener(String projectId, BibDatabaseContext database, ImportFormatPreferences prefs) {
+    public void startWebsocketListener(String projectId, BibDatabaseContext database, ImportFormatPreferences prefs)
+            throws URISyntaxException {
         long millis = System.currentTimeMillis();
         System.out.println(millis);
         String socketioUrl = server + "/socket.io/1";
@@ -117,13 +121,13 @@ public class SharelatexConnector {
 
             String resp = webSocketresponse.body();
             String channel = resp.substring(0, resp.indexOf(":"));
-            System.out.println("Channel " + channel);
 
+            URI webSocketchannelUri = new URIBuilder(socketioUrl + "/websocket/" + channel).setScheme("ws").build();
+            System.out.println("WebSocketChannelUrl " + webSocketchannelUri);
             WebSocketClientWrapper client = new WebSocketClientWrapper(prefs);
-            client.createAndConnect(channel, projectId, database);
+            client.createAndConnect(webSocketchannelUri, projectId, database);
 
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

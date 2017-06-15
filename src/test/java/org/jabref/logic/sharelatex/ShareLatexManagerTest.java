@@ -1,6 +1,7 @@
 package org.jabref.logic.sharelatex;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import org.jabref.model.sharelatex.ShareLatexProject;
@@ -12,7 +13,7 @@ import static org.junit.Assert.assertFalse;
 public class ShareLatexManagerTest {
 
     @Test
-    public void test() {
+    public void test() throws URISyntaxException {
 
         List<ShareLatexProject> projects;
         try {

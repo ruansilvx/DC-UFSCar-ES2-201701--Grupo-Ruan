@@ -1,6 +1,7 @@
 package org.jabref.gui.sharelatex;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import javax.inject.Inject;
 
@@ -31,7 +32,7 @@ public class ShareLatexLoginDialogController extends AbstractController<ShareLat
     }
 
     @FXML
-    private void signIn() {
+    private void signIn() throws URISyntaxException {
         System.out.println("sign in pressed");
         System.out.println(tbAddress.getText());
         System.out.println(tbUsername.getText());
@@ -47,6 +48,7 @@ public class ShareLatexLoginDialogController extends AbstractController<ShareLat
             } else {
                 ShareLatexProjectDialogView dlgprojects = new ShareLatexProjectDialogView();
                 dlgprojects.show();
+                closeDialog();
             }
         } catch (IOException e) {
             FXDialog dlg = new FXDialog(AlertType.ERROR);
