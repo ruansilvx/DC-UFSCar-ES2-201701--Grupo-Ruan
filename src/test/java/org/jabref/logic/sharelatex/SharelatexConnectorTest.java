@@ -24,7 +24,8 @@ public class SharelatexConnectorTest {
         JabRefExecutorService.INSTANCE.executeAndWait(() -> {
 
             try {
-                connector.startWebsocketListener("", new BibDatabaseContext(), mock(ImportFormatPreferences.class));
+                connector.startWebsocketListener("5936d96b1bd5906b0082f53c", new BibDatabaseContext(),
+                        mock(ImportFormatPreferences.class));
             } catch (URISyntaxException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

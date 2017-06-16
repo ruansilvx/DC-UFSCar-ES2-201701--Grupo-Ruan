@@ -33,6 +33,8 @@ public class WebSocketClientWrapper {
     private int commandCounter;
     private BibDatabaseContext newDb;
     private final ImportFormatPreferences prefs;
+    private String docId;
+    private String projectId;
 
     private final ShareLatexParser parser = new ShareLatexParser();
 
@@ -43,6 +45,7 @@ public class WebSocketClientWrapper {
     public void createAndConnect(URI webSocketchannelUri, String projectId, BibDatabaseContext database) {
 
         try {
+            this.projectId = projectId;
             this.newDb = database;
 
             final ClientEndpointConfig cec = ClientEndpointConfig.Builder.create()
@@ -118,7 +121,8 @@ public class WebSocketClientWrapper {
         session.getBasicRemote().sendText("2::");
     }
 
-    public void updateAsDeleteAndInsert(String docId, int position, int version, String oldContent, String newContent)
+    public void sendUpdateAsDeleteAndInsert(String docId, int position, int version, String oldContent,
+            String newContent)
             throws IOException {
         ShareLatexJsonMessage message = new ShareLatexJsonMessage();
         String str = message.createDeleteInsertMessage(docId, position, version, oldContent, newContent);
@@ -139,6 +143,12 @@ public class WebSocketClientWrapper {
 
         System.out.println("OldContent " + updatedcontent);
 
+        try {
+            sendUpdateAsDeleteAndInsert(docId, 0, version, oldContent, updatedcontent);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         //TODO: We need to create a new event or add some parameters
 
         // return saveSession.getStringValue();
@@ -149,19 +159,27 @@ public class WebSocketClientWrapper {
     private void parseContents(String message) {
         try {
 
+            if (message.contains("2::")) {
+                sendHeartBeat();
+            }
+
             if (message.startsWith("[null,{", ShareLatexParser.JSON_START_OFFSET)) {
+                System.out.println("We get a list with all files");
                 //We get a list with all files
                 Map<String, String> dbWithID = parser.getBibTexDatabasesNameWithId(message);
+
+                setDocID(dbWithID.get("references.bib"));
+
                 System.out.println("DBs with ID " + dbWithID);
 
-            }
-            if (message.contains("{\"name\":\"connectionAccepted\"}")) {
-
-                joinProject("5936d96b1bd5906b0082f53c");
+                joinDoc(docId);
 
                 Thread.sleep(200);
 
-                joinDoc("5936d96b1bd5906b0082f53e");
+            }
+            if (message.contains("{\"name\":\"connectionAccepted\"}") && (projectId != null)) {
+
+                joinProject(projectId);
 
                 Thread.sleep(200);
 
@@ -170,20 +188,23 @@ public class WebSocketClientWrapper {
             if (message.startsWith("[null,[", ShareLatexParser.JSON_START_OFFSET)) {
                 System.out.println("Message could be an entry ");
 
-                version = parser.getVersionFromBibTexJsonString(message);
+                int version = parser.getVersionFromBibTexJsonString(message);
+                setVersion(version);
+
+                String bibtexString = parser.getBibTexStringFromJsonMessage(message);
+                setBibTexString(bibtexString);
                 List<BibEntry> entries = parser.parseBibEntryFromJsonMessageString(message, prefs);
 
                 System.out.println("Got new entries");
 
             }
 
-            if (message.contains("otUpdateApplied") && message.contains("5936d96b1bd5906b0082f53e")) {
+            if (message.contains("otUpdateApplied")) {
                 System.out.println("We got an update");
-                String documentId = "5936d96b1bd5906b0082f53e";
 
-                leaveDocument(documentId);
+                leaveDocument(docId);
                 Thread.sleep(200);
-                joinDoc(documentId);
+                joinDoc(docId);
                 Thread.sleep(200);
 
             }
@@ -193,4 +214,19 @@ public class WebSocketClientWrapper {
         }
     }
 
+    private synchronized void setDocID(String docId) {
+        this.docId = docId;
+    }
+
+    private synchronized void updateVersion() {
+        this.version = version + 1;
+    }
+
+    private synchronized void setVersion(int version) {
+        this.version = version;
+    }
+
+    private synchronized void setBibTexString(String bibtex) {
+        this.oldContent = bibtex;
+    }
 }

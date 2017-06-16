@@ -1,9 +1,10 @@
 package org.jabref.logic.sharelatex;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.StringJoiner;
+import java.util.TreeMap;
 
 import org.jabref.logic.importer.ImportFormatPreferences;
 import org.jabref.logic.importer.ParseException;
@@ -131,19 +132,32 @@ public class ShareLatexParser {
 
     List<BibEntry> parseBibEntryFromJsonArray(JsonArray arr, ImportFormatPreferences prefs)
             throws ParseException {
-        JsonArray stringArr = arr.get(1).getAsJsonArray();
-        StringBuilder builder = new StringBuilder();
-        for (JsonElement elem : stringArr) {
-            builder.append(elem.getAsString());
-        }
 
+        String bibtexString = getBibTexStringFromJsonArray(arr);
         BibtexParser parser = new BibtexParser(prefs);
-        return parser.parseEntries(builder.toString());
+        return parser.parseEntries(bibtexString);
 
     }
 
+    public String getBibTexStringFromJsonMessage(String message) {
+        return getBibTexStringFromJsonArray(parseFirstPartOfJson(message));
+    }
+
+    private String getBibTexStringFromJsonArray(JsonArray arr) {
+
+        JsonArray stringArr = arr.get(1).getAsJsonArray();
+
+        StringJoiner joiner = new StringJoiner("\n");
+
+        for (JsonElement elem : stringArr) {
+            joiner.add(elem.getAsString());
+        }
+
+        return joiner.toString();
+    }
+
     public Map<String, String> getBibTexDatabasesNameWithId(String json) {
-        Map<String, String> bibFileWithId = new HashMap<>();
+        Map<String, String> bibFileWithId = new TreeMap<>();
 
         JsonObject obj = parseFirstPartOfJson(json).get(1).getAsJsonObject();
         JsonArray arr = obj.get("rootFolder").getAsJsonArray();
