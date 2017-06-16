@@ -57,9 +57,9 @@ install4j {
 repositories {
     mavenLocal()
     jcenter()
-    maven { url "https://oss.sonatype.org/content/groups/public"  }
-	maven { url "https://repo.eclipse.org/content/repositories/paho-snapshots/"  }
-
+    maven {
+        url 'https://oss.sonatype.org/content/groups/public'
+    }
 }
 
 configurations {
@@ -114,13 +114,14 @@ dependencies {
     compile 'de.codecentric.centerdevice:javafxsvg:1.2.1'
     compile 'org.controlsfx:controlsfx:8.40.12'
     compile 'org.fxmisc.easybind:easybind:1.0.3'
-    compile 'net.corda:jfx:0.11.1'
+    compile 'net.corda:jfx:0.12.1'
     compile 'org.fxmisc.flowless:flowless:0.5.2'
     compile 'de.jensd:fontawesomefx-materialdesignfont:1.7.22-4'
     compile 'org.fxmisc.richtext:richtextfx:0.7-M5'
 
 
     compile 'commons-logging:commons-logging:1.2'
+
     compile 'org.apache.commons:commons-lang3:3.5'
 
     compile 'org.jsoup:jsoup:1.10.3'
@@ -146,8 +147,8 @@ dependencies {
 
     compile "org.glassfish.tyrus.bundles:tyrus-standalone-client:1.13.1"
     compile "com.google.code.gson:gson:2.8.0"
-	compile "net.sourceforge.htmlunit:htmlunit:2.26"
-	compile "com.github.wnameless:json-flattener:0.4.0"
+    compile "net.sourceforge.htmlunit:htmlunit:2.26"
+    compile "com.github.wnameless:json-flattener:0.4.0"
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:2.8.9'
