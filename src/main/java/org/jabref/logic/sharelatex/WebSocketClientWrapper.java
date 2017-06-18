@@ -5,6 +5,8 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.websocket.ClientEndpointConfig;
 import javax.websocket.Endpoint;
@@ -12,6 +14,7 @@ import javax.websocket.EndpointConfig;
 import javax.websocket.MessageHandler.Whole;
 import javax.websocket.Session;
 
+import org.jabref.JabRefExecutorService;
 import org.jabref.logic.exporter.BibtexDatabaseWriter;
 import org.jabref.logic.exporter.SaveException;
 import org.jabref.logic.exporter.SavePreferences;
@@ -35,6 +38,8 @@ public class WebSocketClientWrapper {
     private final ImportFormatPreferences prefs;
     private String docId;
     private String projectId;
+
+    private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
 
     private final ShareLatexParser parser = new ShareLatexParser();
 
@@ -104,16 +109,21 @@ public class WebSocketClientWrapper {
     }
 
     public void joinProject(String projectId) throws IOException {
-        session.getBasicRemote().sendText(
-                "5:1+::{\"name\":\"joinProject\",\"args\":[{\"project_id\":\"" + projectId + "\"}]}");
+        incrementCommandCounter();
+        String text = "5:" + commandCounter + "+::{\"name\":\"joinProject\",\"args\":[{\"project_id\":\"" + projectId + "\"}]}";
+        session.getBasicRemote().sendText(text);
     }
 
     public void joinDoc(String documentId) throws IOException {
-        session.getBasicRemote().sendText("5:7+::{\"name\":\"joinDoc\",\"args\":[\"" + documentId + "\"]}");
+        incrementCommandCounter();
+        String text = "5:" + commandCounter + "+::{\"name\":\"joinDoc\",\"args\":[\"" + documentId + "\"]}";
+        session.getBasicRemote().sendText(text);
     }
 
     public void leaveDocument(String documentId) throws IOException {
-        session.getBasicRemote().sendText("5:6+::{\"name\":\"leaveDoc\",\"args\":[\"" + documentId + "\"]}");
+        incrementCommandCounter();
+        String text = "5:" + commandCounter + "+::{\"name\":\"leaveDoc\",\"args\":[\"" + documentId + "\"]}";
+        session.getBasicRemote().sendText(text);
 
     }
 
@@ -121,31 +131,24 @@ public class WebSocketClientWrapper {
         session.getBasicRemote().sendText("2::");
     }
 
-    public void sendUpdateAsDeleteAndInsert(String docId, int position, int version, String oldContent,
-            String newContent)
-            throws IOException {
+    public void sendUpdateAsDeleteAndInsert(String docId, int position, int version, String oldContent, String newContent) throws IOException {
         ShareLatexJsonMessage message = new ShareLatexJsonMessage();
         String str = message.createDeleteInsertMessage(docId, position, version, oldContent, newContent);
-        System.out.println("Send new update Message" + str);
+        System.out.println("Send new update Message");
 
-        session.getBasicRemote()
-                .sendText("5:8+::" + str);
+        session.getBasicRemote().sendText("5:::" + str);
     }
 
     @Subscribe
-    public synchronized void listen(BibDatabaseContextChangedEvent event)
-            throws SaveException {
-
-        System.out.println("Event called" + event.getClass());
-        BibtexDatabaseWriter<StringSaveSession> databaseWriter = new BibtexDatabaseWriter<>(StringSaveSession::new);
-        StringSaveSession saveSession = databaseWriter.saveDatabase(newDb, new SavePreferences());
-        String updatedcontent = saveSession.getStringValue();
-
-        System.out.println("OldContent " + updatedcontent);
-
+    public synchronized void listen(BibDatabaseContextChangedEvent event) {
         try {
-            sendUpdateAsDeleteAndInsert(docId, 0, version, oldContent, updatedcontent);
-        } catch (IOException e) {
+            System.out.println("Event called" + event.getClass());
+            BibtexDatabaseWriter<StringSaveSession> databaseWriter = new BibtexDatabaseWriter<>(StringSaveSession::new);
+            StringSaveSession saveSession = databaseWriter.saveDatabase(newDb, new SavePreferences());
+            String updatedcontent = saveSession.getStringValue();
+
+            queue.put(updatedcontent);
+        } catch (SaveException | InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
@@ -180,7 +183,6 @@ public class WebSocketClientWrapper {
             if (message.contains("{\"name\":\"connectionAccepted\"}") && (projectId != null)) {
 
                 joinProject(projectId);
-
                 Thread.sleep(200);
 
             }
@@ -197,6 +199,16 @@ public class WebSocketClientWrapper {
 
                 System.out.println("Got new entries");
 
+                JabRefExecutorService.INSTANCE.execute(() -> {
+                    try {
+                        String updatedContent = queue.take();
+                        sendUpdateAsDeleteAndInsert(docId, 0, version, oldContent, updatedContent);
+                    } catch (IOException | InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+
+                });
             }
 
             if (message.contains("otUpdateApplied")) {
@@ -218,15 +230,15 @@ public class WebSocketClientWrapper {
         this.docId = docId;
     }
 
-    private synchronized void updateVersion() {
-        this.version = version + 1;
-    }
-
     private synchronized void setVersion(int version) {
         this.version = version;
     }
 
     private synchronized void setBibTexString(String bibtex) {
         this.oldContent = bibtex;
+    }
+
+    private synchronized void incrementCommandCounter() {
+        this.commandCounter = commandCounter + 1;
     }
 }
