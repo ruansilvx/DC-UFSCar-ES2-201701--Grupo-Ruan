@@ -187,7 +187,7 @@ public class WebSocketClientWrapper {
 
             }
 
-            if (message.startsWith("[null,[", ShareLatexParser.JSON_START_OFFSET)) {
+            if (message.contains("[null,[")) {
                 System.out.println("Message could be an entry ");
 
                 int version = parser.getVersionFromBibTexJsonString(message);
@@ -202,6 +202,7 @@ public class WebSocketClientWrapper {
                 JabRefExecutorService.INSTANCE.execute(() -> {
                     try {
                         String updatedContent = queue.take();
+                        System.out.println("Taken from queue");
                         sendUpdateAsDeleteAndInsert(docId, 0, version, oldContent, updatedContent);
                     } catch (IOException | InterruptedException e) {
                         // TODO Auto-generated catch block
