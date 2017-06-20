@@ -25,6 +25,7 @@ import org.jabref.model.database.BibDatabaseContext;
 import org.jabref.model.database.event.BibDatabaseContextChangedEvent;
 import org.jabref.model.entry.BibEntry;
 
+import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import org.glassfish.tyrus.client.ClientManager;
 
@@ -38,6 +39,8 @@ public class WebSocketClientWrapper {
     private final ImportFormatPreferences prefs;
     private String docId;
     private String projectId;
+    private final EventBus eventBus = new EventBus("SharelatexEventBus");
+
 
     private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
 
@@ -45,6 +48,7 @@ public class WebSocketClientWrapper {
 
     public WebSocketClientWrapper(ImportFormatPreferences prefs) {
         this.prefs = prefs;
+        this.eventBus.register(this);
     }
 
     public void createAndConnect(URI webSocketchannelUri, String projectId, BibDatabaseContext database) {
@@ -140,7 +144,7 @@ public class WebSocketClientWrapper {
     }
 
     @Subscribe
-    public synchronized void listen(BibDatabaseContextChangedEvent event) {
+    public synchronized void listenToBibDatabase(BibDatabaseContextChangedEvent event) {
         try {
             System.out.println("Event called" + event.getClass());
             BibtexDatabaseWriter<StringSaveSession> databaseWriter = new BibtexDatabaseWriter<>(StringSaveSession::new);
@@ -158,12 +162,29 @@ public class WebSocketClientWrapper {
 
     }
 
+    @Subscribe
+    public synchronized void listenToSharelatexEntryMessage(ShareLatexEntryMessageEvent event) {
+
+        JabRefExecutorService.INSTANCE.execute(() -> {
+            try {
+                String updatedContent = queue.take();
+                System.out.println("Taken from queue");
+                sendUpdateAsDeleteAndInsert(docId, 0, version, oldContent, updatedContent);
+            } catch (IOException | InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+        });
+    }
+
     //Actual response handling
     private void parseContents(String message) {
         try {
 
             if (message.contains("2::")) {
                 sendHeartBeat();
+                eventBus.post(new ShareLatexEntryMessageEvent());
             }
 
             if (message.startsWith("[null,{", ShareLatexParser.JSON_START_OFFSET)) {
@@ -197,19 +218,10 @@ public class WebSocketClientWrapper {
                 setBibTexString(bibtexString);
                 List<BibEntry> entries = parser.parseBibEntryFromJsonMessageString(message, prefs);
 
+
                 System.out.println("Got new entries");
+                eventBus.post(new ShareLatexEntryMessageEvent());
 
-                JabRefExecutorService.INSTANCE.execute(() -> {
-                    try {
-                        String updatedContent = queue.take();
-                        System.out.println("Taken from queue");
-                        sendUpdateAsDeleteAndInsert(docId, 0, version, oldContent, updatedContent);
-                    } catch (IOException | InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-
-                });
             }
 
             if (message.contains("otUpdateApplied")) {
@@ -218,7 +230,7 @@ public class WebSocketClientWrapper {
                 leaveDocument(docId);
                 Thread.sleep(200);
                 joinDoc(docId);
-                Thread.sleep(200);
+
 
             }
 
