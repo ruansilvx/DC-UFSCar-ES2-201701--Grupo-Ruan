@@ -40,7 +40,7 @@ public class WebSocketClientWrapper {
     private String docId;
     private String projectId;
     private final EventBus eventBus = new EventBus("SharelatexEventBus");
-
+    private boolean leftDoc = false;
 
     private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
 
@@ -149,7 +149,7 @@ public class WebSocketClientWrapper {
             System.out.println("Event called" + event.getClass());
             BibtexDatabaseWriter<StringSaveSession> databaseWriter = new BibtexDatabaseWriter<>(StringSaveSession::new);
             StringSaveSession saveSession = databaseWriter.saveDatabase(newDb, new SavePreferences());
-            String updatedcontent = saveSession.getStringValue();
+            String updatedcontent = saveSession.getStringValue().replace("\r\n", "\n");
 
             queue.put(updatedcontent);
         } catch (SaveException | InterruptedException e) {
@@ -165,17 +165,20 @@ public class WebSocketClientWrapper {
     @Subscribe
     public synchronized void listenToSharelatexEntryMessage(ShareLatexEntryMessageEvent event) {
 
-        JabRefExecutorService.INSTANCE.execute(() -> {
+        JabRefExecutorService.INSTANCE.executeInterruptableTask(()->{
             try {
                 String updatedContent = queue.take();
-                System.out.println("Taken from queue");
-                sendUpdateAsDeleteAndInsert(docId, 0, version, oldContent, updatedContent);
+                if (!leftDoc) {
+                    System.out.println("Taken from queue");
+                    sendUpdateAsDeleteAndInsert(docId, 0, version, oldContent, updatedContent);
+
+                }
             } catch (IOException | InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-
         });
+
     }
 
     //Actual response handling
@@ -185,6 +188,10 @@ public class WebSocketClientWrapper {
             if (message.contains("2::")) {
                 sendHeartBeat();
                 eventBus.post(new ShareLatexEntryMessageEvent());
+            }
+            if (message.endsWith("[null]")) {
+                System.out.println("Received null-> Rejoining doc");
+                joinDoc(docId);
             }
 
             if (message.startsWith("[null,{", ShareLatexParser.JSON_START_OFFSET)) {
@@ -198,17 +205,15 @@ public class WebSocketClientWrapper {
 
                 joinDoc(docId);
 
-                Thread.sleep(200);
-
             }
             if (message.contains("{\"name\":\"connectionAccepted\"}") && (projectId != null)) {
 
                 joinProject(projectId);
-                Thread.sleep(200);
 
             }
 
             if (message.contains("[null,[")) {
+                setLeftDoc(false);
                 System.out.println("Message could be an entry ");
 
                 int version = parser.getVersionFromBibTexJsonString(message);
@@ -217,7 +222,6 @@ public class WebSocketClientWrapper {
                 String bibtexString = parser.getBibTexStringFromJsonMessage(message);
                 setBibTexString(bibtexString);
                 List<BibEntry> entries = parser.parseBibEntryFromJsonMessageString(message, prefs);
-
 
                 System.out.println("Got new entries");
                 eventBus.post(new ShareLatexEntryMessageEvent());
@@ -228,13 +232,10 @@ public class WebSocketClientWrapper {
                 System.out.println("We got an update");
 
                 leaveDocument(docId);
-                Thread.sleep(200);
-                joinDoc(docId);
-
-
+                setLeftDoc(true);
             }
 
-        } catch (InterruptedException | IOException | ParseException e) {
+        } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
     }
@@ -253,5 +254,9 @@ public class WebSocketClientWrapper {
 
     private synchronized void incrementCommandCounter() {
         this.commandCounter = commandCounter + 1;
+    }
+
+    private synchronized void setLeftDoc(boolean leftDoc) {
+        this.leftDoc = leftDoc;
     }
 }
