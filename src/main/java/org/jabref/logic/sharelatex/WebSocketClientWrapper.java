@@ -3,6 +3,7 @@ package org.jabref.logic.sharelatex;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -140,7 +141,7 @@ public class WebSocketClientWrapper {
 
             if (message.contains("2::")) {
                 setLeftDoc(false);
-                eventBus.post(new ShareLatexEntryMessageEvent());
+                eventBus.post(new ShareLatexEntryMessageEvent(Collections.emptyList()));
                 sendHeartBeat();
 
             }
@@ -179,7 +180,8 @@ public class WebSocketClientWrapper {
 
                 System.out.println("Got new entries");
                 setLeftDoc(false);
-                eventBus.post(new ShareLatexEntryMessageEvent());
+
+                eventBus.post(new ShareLatexEntryMessageEvent(entries));
 
             }
 
@@ -193,6 +195,14 @@ public class WebSocketClientWrapper {
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
+    }
+
+    public void registerListener(Object listener) {
+        eventBus.register(listener);
+    }
+
+    public void unregisterListener(Object listener) {
+        eventBus.unregister(listener);
     }
 
     private synchronized void setDocID(String docId) {
@@ -213,5 +223,12 @@ public class WebSocketClientWrapper {
 
     private synchronized void setLeftDoc(boolean leftDoc) {
         this.leftDoc = leftDoc;
+    }
+
+    public void leaveDocAndCloseConn() throws IOException {
+        leaveDocument(docId);
+        queue.clear();
+        session.close();
+
     }
 }

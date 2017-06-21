@@ -7,10 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.jabref.logic.exporter.BibtexDatabaseWriter;
-import org.jabref.logic.exporter.SaveException;
-import org.jabref.logic.exporter.SavePreferences;
-import org.jabref.logic.exporter.StringSaveSession;
 import org.jabref.logic.importer.ImportFormatPreferences;
 import org.jabref.model.database.BibDatabaseContext;
 
@@ -134,17 +130,21 @@ public class SharelatexConnector {
         }
     }
 
-    public void sendNewDatabaseContent(BibDatabaseContext database) {
-        try {
-            BibtexDatabaseWriter<StringSaveSession> databaseWriter = new BibtexDatabaseWriter<>(StringSaveSession::new);
-            StringSaveSession saveSession = databaseWriter.saveDatabase(database, new SavePreferences());
-            String updatedcontent = saveSession.getStringValue().replace("\r\n", "\n");
+    public void sendNewDatabaseContent(String newContent) throws InterruptedException {
+        client.sendNewDatabaseContent(newContent);
+    }
 
-            client.sendNewDatabaseContent(updatedcontent);
-        } catch (InterruptedException | SaveException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+    public void registerListener(Object listener) {
+        client.registerListener(listener);
+
+    }
+    public void unregisterListener(Object listener) {
+        client.unregisterListener(listener);
+    }
+
+    public void disconnectAndCloseConn() {
+        client.leaveDocAndCloseConn();
+
     }
 
 }

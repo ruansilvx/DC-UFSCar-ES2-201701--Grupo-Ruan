@@ -6,10 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jabref.JabRefExecutorService;
+import org.jabref.logic.exporter.BibtexDatabaseWriter;
+import org.jabref.logic.exporter.SaveException;
+import org.jabref.logic.exporter.SavePreferences;
+import org.jabref.logic.exporter.StringSaveSession;
 import org.jabref.logic.importer.ImportFormatPreferences;
 import org.jabref.model.database.BibDatabaseContext;
 import org.jabref.model.sharelatex.ShareLatexProject;
 
+import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
@@ -53,6 +58,7 @@ public class ShareLatexManager {
 
             try {
                 connector.startWebsocketListener(projectID, database, preferences);
+                connector.registerListener(ShareLatexManager.this);
             } catch (URISyntaxException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -62,6 +68,24 @@ public class ShareLatexManager {
 
     //Aufrufen bei save oder so
     public void sendNewDataseContent(BibDatabaseContext database) {
-        connector.sendNewDatabaseContent(database);
+        try {
+            BibtexDatabaseWriter<StringSaveSession> databaseWriter = new BibtexDatabaseWriter<>(StringSaveSession::new);
+            StringSaveSession saveSession = databaseWriter.saveDatabase(database, new SavePreferences());
+            String updatedcontent = saveSession.getStringValue().replace("\r\n", "\n");
+
+            connector.sendNewDatabaseContent(updatedcontent);
+        } catch (InterruptedException | SaveException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    @Subscribe
+    public void listenforSharelatexEventMessage(ShareLatexEntryMessageEvent event) {
+        System.out.println("New Entries from event");
+    }
+
+    public void disconnectAndCloseConnection() {
+        connector.disconnectAndCloseConn();
     }
 }
