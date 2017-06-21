@@ -15,14 +15,9 @@ import javax.websocket.MessageHandler.Whole;
 import javax.websocket.Session;
 
 import org.jabref.JabRefExecutorService;
-import org.jabref.logic.exporter.BibtexDatabaseWriter;
-import org.jabref.logic.exporter.SaveException;
-import org.jabref.logic.exporter.SavePreferences;
-import org.jabref.logic.exporter.StringSaveSession;
 import org.jabref.logic.importer.ImportFormatPreferences;
 import org.jabref.logic.importer.ParseException;
 import org.jabref.model.database.BibDatabaseContext;
-import org.jabref.model.database.event.BibDatabaseContextChangedEvent;
 import org.jabref.model.entry.BibEntry;
 
 import com.google.common.eventbus.EventBus;
@@ -73,15 +68,10 @@ public class WebSocketClientWrapper {
                 }
             }, cec, webSocketchannelUri);
 
-            database.getDatabase().registerListener(this);
-
             //TODO: Change Dialog
             //TODO: On database change event or on save event send new version
             //TODO: When new db content arrived run merge dialog
             //TODO: Identfiy active database/Name of database/doc Id (partly done)
-
-
-
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -91,7 +81,8 @@ public class WebSocketClientWrapper {
 
     public void joinProject(String projectId) throws IOException {
         incrementCommandCounter();
-        String text = "5:" + commandCounter + "+::{\"name\":\"joinProject\",\"args\":[{\"project_id\":\"" + projectId + "\"}]}";
+        String text = "5:" + commandCounter + "+::{\"name\":\"joinProject\",\"args\":[{\"project_id\":\"" + projectId
+                + "\"}]}";
         session.getBasicRemote().sendText(text);
     }
 
@@ -108,36 +99,20 @@ public class WebSocketClientWrapper {
 
     }
 
-    public void sendHeartBeat() throws IOException {
+    private void sendHeartBeat() throws IOException {
         session.getBasicRemote().sendText("2::");
     }
 
-    public void sendUpdateAsDeleteAndInsert(String docId, int position, int version, String oldContent,
-            String newContent) throws IOException {
+    public void sendNewDatabaseContent(String newContent) throws InterruptedException {
+        queue.put(newContent);
+    }
+
+    private void sendUpdateAsDeleteAndInsert(String docId, int position, int version, String oldContent, String newContent) throws IOException {
         ShareLatexJsonMessage message = new ShareLatexJsonMessage();
         String str = message.createDeleteInsertMessage(docId, position, version, oldContent, newContent);
         System.out.println("Send new update Message");
 
         session.getBasicRemote().sendText("5:::" + str);
-    }
-
-    @Subscribe
-    public synchronized void listenToBibDatabase(BibDatabaseContextChangedEvent event) {
-        try {
-            System.out.println("Event called" + event.getClass());
-            BibtexDatabaseWriter<StringSaveSession> databaseWriter = new BibtexDatabaseWriter<>(StringSaveSession::new);
-            StringSaveSession saveSession = databaseWriter.saveDatabase(newDb, new SavePreferences());
-            String updatedcontent = saveSession.getStringValue().replace("\r\n", "\n");
-
-            queue.put(updatedcontent);
-        } catch (SaveException | InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        //TODO: We need to create a new event or add some parameters
-
-        // return saveSession.getStringValue();
-
     }
 
     @Subscribe
@@ -205,7 +180,6 @@ public class WebSocketClientWrapper {
                 System.out.println("Got new entries");
                 setLeftDoc(false);
                 eventBus.post(new ShareLatexEntryMessageEvent());
-
 
             }
 

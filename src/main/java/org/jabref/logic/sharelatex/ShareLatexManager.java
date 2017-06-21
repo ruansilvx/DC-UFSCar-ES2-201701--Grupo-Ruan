@@ -12,14 +12,13 @@ import org.jabref.model.sharelatex.ShareLatexProject;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import org.apache.commons.lang3.NotImplementedException;
 
 public class ShareLatexManager {
 
     private final SharelatexConnector connector = new SharelatexConnector();
     private final List<ShareLatexProject> projects = new ArrayList<>();
 
-    public String login(String server, String username, String password) throws IOException, URISyntaxException {
+    public String login(String server, String username, String password) throws IOException {
         return connector.connectToServer(server, username, password);
     }
 
@@ -49,14 +48,7 @@ public class ShareLatexManager {
         return projects;
     }
 
-    public void uploadLibrary(String projectId, BibDatabaseContext database) {
-        throw new NotImplementedException("Not really working");
-        //TODO: Not yet implemented
-
-    }
-
-    public void startWebSocketHandler(String projectID, BibDatabaseContext database,
-            ImportFormatPreferences preferences) {
+    public void startWebSocketHandler(String projectID, BibDatabaseContext database, ImportFormatPreferences preferences) {
         JabRefExecutorService.INSTANCE.executeAndWait(() -> {
 
             try {
@@ -66,5 +58,10 @@ public class ShareLatexManager {
                 e.printStackTrace();
             }
         });
+    }
+
+    //Aufrufen bei save oder so
+    public void sendNewDataseContent(BibDatabaseContext database) {
+        connector.sendNewDatabaseContent(database);
     }
 }

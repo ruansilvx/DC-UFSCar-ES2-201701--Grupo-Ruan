@@ -1,15 +1,16 @@
 package org.jabref.logic.sharelatex;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.jabref.logic.exporter.BibtexDatabaseWriter;
+import org.jabref.logic.exporter.SaveException;
+import org.jabref.logic.exporter.SavePreferences;
+import org.jabref.logic.exporter.StringSaveSession;
 import org.jabref.logic.importer.ImportFormatPreferences;
 import org.jabref.model.database.BibDatabaseContext;
 
@@ -34,6 +35,7 @@ public class SharelatexConnector {
     private String loginUrl;
     private String csrfToken;
     private String projectUrl;
+    private WebSocketClientWrapper client;
 
     public String connectToServer(String serverUri, String user, String password) throws IOException {
 
@@ -124,7 +126,7 @@ public class SharelatexConnector {
 
             URI webSocketchannelUri = new URIBuilder(socketioUrl + "/websocket/" + channel).setScheme("ws").build();
             System.out.println("WebSocketChannelUrl " + webSocketchannelUri);
-            WebSocketClientWrapper client = new WebSocketClientWrapper(prefs);
+            client = new WebSocketClientWrapper(prefs);
             client.createAndConnect(webSocketchannelUri, projectId, database);
 
         } catch (IOException e) {
@@ -132,35 +134,14 @@ public class SharelatexConnector {
         }
     }
 
-    //TODO: Does not work
-    public void uploadFile(String projectId, Path path) {
-        String activeProject = projectUrl + "/" + projectId;
-        String uploadUrl = activeProject + "/upload";
-
+    public void sendNewDatabaseContent(BibDatabaseContext database) {
         try {
-            try (InputStream str = Files.newInputStream(path)) {
+            BibtexDatabaseWriter<StringSaveSession> databaseWriter = new BibtexDatabaseWriter<>(StringSaveSession::new);
+            StringSaveSession saveSession = databaseWriter.saveDatabase(database, new SavePreferences());
+            String updatedcontent = saveSession.getStringValue().replace("\r\n", "\n");
 
-                String urlWithParms = uploadUrl + "?folder_id=" + projectId + "&_csrf=" + csrfToken
-                        + "&qquuid=28774ed2-ae25-44f1-9388-c78f1c6b8286" + "&qqtotalfilesize="
-                        + Long.toString(Files.size(path));
-
-                Connection.Response fileResp = Jsoup.connect(urlWithParms).cookies(loginCookies)
-                        .header("Host", "192.168.1.248")
-                        .header("Accept", "*/*")
-                        .header("Accept-Language", "Accept-Language: de,en-US;q=0.7,en;q=0.3")
-                        .header("Accept-Encoding", "gzip, deflate")
-                        .header("X-Requested-With", "XMLHttpRequest")
-                        .header("Cache-Control", "no-cache")
-                        .data("qqfile", path.getFileName().toString(), str)
-                        .cookies(loginCookies).ignoreContentType(true)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; WOW64; rv:53.0) Gecko/20100101 Firefox/53.0")
-                        .method(Method.POST).execute();
-
-                //TODO: Investigate why they also get send as multipart form request
-                System.out.println(fileResp.body());
-            }
-
-        } catch (IOException e) {
+            client.sendNewDatabaseContent(updatedcontent);
+        } catch (InterruptedException | SaveException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
