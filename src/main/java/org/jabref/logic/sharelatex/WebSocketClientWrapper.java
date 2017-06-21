@@ -205,6 +205,7 @@ public class WebSocketClientWrapper {
         session.close();
 
     }
+
     public void registerListener(Object listener) {
         eventBus.register(listener);
     }
@@ -232,6 +233,5 @@ public class WebSocketClientWrapper {
     private synchronized void setLeftDoc(boolean leftDoc) {
         this.leftDoc = leftDoc;
     }
-
 
 }

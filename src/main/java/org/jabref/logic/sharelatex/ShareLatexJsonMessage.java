@@ -5,8 +5,7 @@ import com.google.gson.JsonObject;
 
 public class ShareLatexJsonMessage {
 
-    public String createDeleteInsertMessage(String docId, int position, int version, String oldContent,
-            String newContent) {
+    public String createDeleteInsertMessage(String docId, int position, int version, String oldContent, String newContent) {
 
         JsonObject insertContent = new JsonObject();
         insertContent.addProperty("p", position);
