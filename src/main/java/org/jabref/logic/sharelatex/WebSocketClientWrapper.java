@@ -75,36 +75,13 @@ public class WebSocketClientWrapper {
 
             database.getDatabase().registerListener(this);
 
-            //TODO: Send/Receive with CountDownLatch -- Find alternative
             //TODO: Change Dialog
-            //TODO: Keep old database string which last came in + version
             //TODO: On database change event or on save event send new version
             //TODO: When new db content arrived run merge dialog
-            //TODO: Find out how to best increment the numbers (see python script from vim)
             //TODO: Identfiy active database/Name of database/doc Id (partly done)
-            //TODO: Switch back to anymous class to have all in one class?
-            //TODO:
 
-            //If message starts with [null,[ we have an entry content
-            //If message contains rootDoc or so then we have gotten the initial joinProject result
-            /*
-             * Received message: 1::
-            Received message: 5:::{"name":"connectionAccepted"}
-            Received message: 6:::1+[null,{"_id":"5936d96b1bd5906b0082f53c","name":"Example","rootDoc_id":"5936d96b1bd5906b0082f53d","rootFolder":[{"_id":"5936d96b1bd5906b0082f53b","name":"rootFolder","folders":[],"fileRefs":[{"_id":"5936d96b1bd5906b0082f53f","name":"universe.jpg"}],"docs":[{"_id":"5936d96b1bd5906b0082f53d","name":"main.tex"},{"_id":"5936d96b1bd5906b0082f53e","name":"references.bib"}]}],"publicAccesLevel":"private","dropboxEnabled":false,"compiler":"pdflatex","description":"","spellCheckLanguage":"en","deletedByExternalDataSource":false,"deletedDocs":[],"members":[{"_id":"5912e195a303b468002eaad0","first_name":"jim","last_name":"","email":"jim@example.com","privileges":"readAndWrite","signUpDate":"2017-05-10T09:47:01.325Z"}],"invites":[],"owner":{"_id":"5909ed80761dc10a01f7abc0","first_name":"joe","last_name":"","email":"joe@example.com","privileges":"owner","signUpDate":"2017-05-03T14:47:28.665Z"},"features":{"trackChanges":true,"references":true,"templates":true,"compileGroup":"standard","compileTimeout":180,"github":false,"dropbox":true,"versioning":true,"collaborators":-1,"trackChangesVisible":false}},"owner",2]
-            Received message: 6:::7+[null,["@book{adams1996hitchhiker,","  author = {Adams, D.}","}@book{adams1995hitchhiker,       ","   title={The Hitchhiker's Guide to the Galaxy},","  author={Adams, D.},","  isbn={9781417642595},","  url={http://books.google.com/books?id=W-xMPgAACAAJ},","  year={199},","  publisher={San Val}","}",""],73,[],{}]
-            Message could be an entry
 
-            //We need a command counter which updates the part after :
 
-             * if message_type == "update":
-            self.ipc_session.send("5:::"+message_content)
-            elif message_type == "cmd":
-                self.command_counter += 1
-            self.ipc_session.send("5:" + str(self.command_counter) + "+::" + message_content)
-                elif message_type == "alive":
-            self.ipc_session.send("2::")
-
-             */
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -135,7 +112,8 @@ public class WebSocketClientWrapper {
         session.getBasicRemote().sendText("2::");
     }
 
-    public void sendUpdateAsDeleteAndInsert(String docId, int position, int version, String oldContent, String newContent) throws IOException {
+    public void sendUpdateAsDeleteAndInsert(String docId, int position, int version, String oldContent,
+            String newContent) throws IOException {
         ShareLatexJsonMessage message = new ShareLatexJsonMessage();
         String str = message.createDeleteInsertMessage(docId, position, version, oldContent, newContent);
         System.out.println("Send new update Message");
@@ -165,7 +143,7 @@ public class WebSocketClientWrapper {
     @Subscribe
     public synchronized void listenToSharelatexEntryMessage(ShareLatexEntryMessageEvent event) {
 
-        JabRefExecutorService.INSTANCE.executeInterruptableTask(()->{
+        JabRefExecutorService.INSTANCE.executeInterruptableTask(() -> {
             try {
                 String updatedContent = queue.take();
                 if (!leftDoc) {
@@ -186,8 +164,10 @@ public class WebSocketClientWrapper {
         try {
 
             if (message.contains("2::")) {
-                sendHeartBeat();
+                setLeftDoc(false);
                 eventBus.post(new ShareLatexEntryMessageEvent());
+                sendHeartBeat();
+
             }
             if (message.endsWith("[null]")) {
                 System.out.println("Received null-> Rejoining doc");
@@ -213,7 +193,6 @@ public class WebSocketClientWrapper {
             }
 
             if (message.contains("[null,[")) {
-                setLeftDoc(false);
                 System.out.println("Message could be an entry ");
 
                 int version = parser.getVersionFromBibTexJsonString(message);
@@ -224,7 +203,9 @@ public class WebSocketClientWrapper {
                 List<BibEntry> entries = parser.parseBibEntryFromJsonMessageString(message, prefs);
 
                 System.out.println("Got new entries");
+                setLeftDoc(false);
                 eventBus.post(new ShareLatexEntryMessageEvent());
+
 
             }
 
