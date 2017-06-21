@@ -12,6 +12,7 @@ import org.jabref.logic.exporter.SavePreferences;
 import org.jabref.logic.exporter.StringSaveSession;
 import org.jabref.logic.importer.ImportFormatPreferences;
 import org.jabref.model.database.BibDatabaseContext;
+import org.jabref.model.entry.BibEntry;
 import org.jabref.model.sharelatex.ShareLatexProject;
 
 import com.google.common.eventbus.Subscribe;
@@ -58,7 +59,7 @@ public class ShareLatexManager {
 
             try {
                 connector.startWebsocketListener(projectID, database, preferences);
-                connector.registerListener(ShareLatexManager.this);
+                registerListener(ShareLatexManager.this);
             } catch (URISyntaxException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -66,7 +67,8 @@ public class ShareLatexManager {
         });
     }
 
-    //Aufrufen bei save oder so
+    //Send new changes to the server
+    //At best when we do a save operation
     public void sendNewDataseContent(BibDatabaseContext database) {
         try {
             BibtexDatabaseWriter<StringSaveSession> databaseWriter = new BibtexDatabaseWriter<>(StringSaveSession::new);
@@ -82,7 +84,20 @@ public class ShareLatexManager {
 
     @Subscribe
     public void listenforSharelatexEventMessage(ShareLatexEntryMessageEvent event) {
+        //This is called when we received new entries from the server
+        //We always get a complete database
+        //TODO: find a way to show the merge dialog then
         System.out.println("New Entries from event");
+        List<BibEntry> entries = event.getEntries();
+
+    }
+
+    public void registerListener(Object listener) {
+        connector.registerListener(listener);
+    }
+
+    public void unregisterListener(Object listener) {
+        connector.unregisterListener(listener);
     }
 
     public void disconnectAndCloseConnection() {

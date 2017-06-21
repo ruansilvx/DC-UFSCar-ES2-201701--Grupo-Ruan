@@ -37,7 +37,7 @@ public class DefaultInjector implements PresenterFactory {
         } else if (clazz == StateManager.class) {
             return Globals.stateManager;
         } else if (clazz == ShareLatexManager.class) {
-            return new ShareLatexManager();
+            return Globals.shareLatexManager;
         } else {
             try {
                 return clazz.newInstance();

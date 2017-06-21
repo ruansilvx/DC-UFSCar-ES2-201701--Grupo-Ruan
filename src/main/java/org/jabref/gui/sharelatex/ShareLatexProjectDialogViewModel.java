@@ -28,4 +28,5 @@ public class ShareLatexProjectDialogViewModel extends AbstractViewModel {
         return this.projects;
     }
 
+
 }

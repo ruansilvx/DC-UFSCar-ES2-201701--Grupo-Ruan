@@ -3,6 +3,7 @@ package org.jabref.logic.sharelatex;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -125,6 +126,8 @@ public class SharelatexConnector {
             client = new WebSocketClientWrapper(prefs);
             client.createAndConnect(webSocketchannelUri, projectId, database);
 
+            setDatabaseName(database);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -138,13 +141,25 @@ public class SharelatexConnector {
         client.registerListener(listener);
 
     }
+
     public void unregisterListener(Object listener) {
         client.unregisterListener(listener);
     }
 
     public void disconnectAndCloseConn() {
-        client.leaveDocAndCloseConn();
+        try {
+            client.leaveDocAndCloseConn();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
+    }
+
+    private void setDatabaseName(BibDatabaseContext database) {
+
+        String dbName = database.getDatabasePath().map(Path::getFileName).map(Path::toString).orElse("");
+        client.setDatabaseName(dbName);
     }
 
 }

@@ -1,8 +1,6 @@
 package org.jabref.gui.sharelatex;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
@@ -32,7 +30,7 @@ public class ShareLatexLoginDialogController extends AbstractController<ShareLat
     }
 
     @FXML
-    private void signIn() throws URISyntaxException {
+    private void signIn() {
         System.out.println("sign in pressed");
         System.out.println(tbAddress.getText());
         System.out.println(tbUsername.getText());

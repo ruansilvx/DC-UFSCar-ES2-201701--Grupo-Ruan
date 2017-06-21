@@ -31,10 +31,10 @@ public class WebSocketClientWrapper {
     private String oldContent;
     private int version;
     private int commandCounter;
-    private BibDatabaseContext newDb;
     private final ImportFormatPreferences prefs;
     private String docId;
     private String projectId;
+    private String databaseName;
     private final EventBus eventBus = new EventBus("SharelatexEventBus");
     private boolean leftDoc = false;
 
@@ -51,8 +51,6 @@ public class WebSocketClientWrapper {
 
         try {
             this.projectId = projectId;
-            this.newDb = database;
-
             final ClientEndpointConfig cec = ClientEndpointConfig.Builder.create()
                     .preferredSubprotocols(Arrays.asList("mqttt")).build();
             ClientManager client = ClientManager.createClient();
@@ -197,6 +195,16 @@ public class WebSocketClientWrapper {
         }
     }
 
+    public void setDatabaseName(String bibFileName) {
+        this.databaseName = bibFileName;
+    }
+
+    public void leaveDocAndCloseConn() throws IOException {
+        leaveDocument(docId);
+        queue.clear();
+        session.close();
+
+    }
     public void registerListener(Object listener) {
         eventBus.register(listener);
     }
@@ -225,10 +233,5 @@ public class WebSocketClientWrapper {
         this.leftDoc = leftDoc;
     }
 
-    public void leaveDocAndCloseConn() throws IOException {
-        leaveDocument(docId);
-        queue.clear();
-        session.close();
 
-    }
 }
