@@ -1,6 +1,10 @@
 package org.jabref.gui.sharelatex;
 
-import java.util.Collections;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,11 +13,8 @@ import javafx.collections.FXCollections;
 
 import org.jabref.gui.AbstractViewModel;
 import org.jabref.gui.StateManager;
-import org.jabref.logic.bibtex.comparator.EntryComparator;
 import org.jabref.logic.sharelatex.ShareLatexEntryMessageEvent;
 import org.jabref.logic.sharelatex.ShareLatexManager;
-import org.jabref.model.entry.BibEntry;
-import org.jabref.model.entry.FieldName;
 import org.jabref.model.sharelatex.ShareLatexProject;
 
 import com.google.common.eventbus.Subscribe;
@@ -39,14 +40,19 @@ public class ShareLatexProjectDialogViewModel extends AbstractViewModel {
         return this.projects;
     }
 
-
     @Subscribe
     public void listenToSharelatexEntryMessage(ShareLatexEntryMessageEvent event) {
 
-        List<BibEntry> entries = event.getEntries();
-        Collections.sort(entries, new EntryComparator(false, true, FieldName.AUTHOR));
-        List<BibEntry> entriesInDB = stateManager.getEntriesInCurrentDatabase();
-        Collections.sort(entriesInDB, new EntryComparator(false, true, FieldName.AUTHOR));
+        Path p = stateManager.getActiveDatabase().get().getDatabasePath().get();
+
+        try (BufferedWriter writer = Files.newBufferedWriter(p, StandardCharsets.UTF_8)) {
+            writer.write(event.getNewDatabaseContent());
+            writer.close();
+
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
     }
 

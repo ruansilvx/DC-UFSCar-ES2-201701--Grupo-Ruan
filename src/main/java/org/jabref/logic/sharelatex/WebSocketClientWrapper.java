@@ -183,7 +183,7 @@ public class WebSocketClientWrapper {
                 System.out.println("Got new entries");
                 setLeftDoc(false);
 
-                eventBus.post(new ShareLatexEntryMessageEvent(entries));
+                eventBus.post(new ShareLatexEntryMessageEvent(entries, bibtexString));
                 eventBus.post(new ShareLatexContinueMessage());
 
             }
