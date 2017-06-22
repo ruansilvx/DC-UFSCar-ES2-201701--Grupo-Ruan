@@ -12,10 +12,8 @@ import org.jabref.logic.exporter.SavePreferences;
 import org.jabref.logic.exporter.StringSaveSession;
 import org.jabref.logic.importer.ImportFormatPreferences;
 import org.jabref.model.database.BibDatabaseContext;
-import org.jabref.model.entry.BibEntry;
 import org.jabref.model.sharelatex.ShareLatexProject;
 
-import com.google.common.eventbus.Subscribe;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
@@ -82,15 +80,6 @@ public class ShareLatexManager {
         }
     }
 
-    @Subscribe
-    public void listenforSharelatexEventMessage(ShareLatexEntryMessageEvent event) {
-        //This is called when we received new entries from the server
-        //We always get a complete database
-        //TODO: find a way to show the merge dialog then
-        System.out.println("New Entries from event");
-        List<BibEntry> entries = event.getEntries();
-
-    }
 
     public void registerListener(Object listener) {
         connector.registerListener(listener);

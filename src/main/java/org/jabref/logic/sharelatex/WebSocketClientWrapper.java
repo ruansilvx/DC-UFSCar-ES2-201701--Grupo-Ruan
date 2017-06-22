@@ -3,7 +3,6 @@ package org.jabref.logic.sharelatex;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -31,7 +30,7 @@ public class WebSocketClientWrapper {
     private String oldContent;
     private int version;
     private int commandCounter;
-    private final ImportFormatPreferences prefs;
+    private ImportFormatPreferences prefs;
     private String docId;
     private String projectId;
     private String databaseName;
@@ -42,9 +41,12 @@ public class WebSocketClientWrapper {
 
     private final ShareLatexParser parser = new ShareLatexParser();
 
-    public WebSocketClientWrapper(ImportFormatPreferences prefs) {
-        this.prefs = prefs;
+    public WebSocketClientWrapper() {
         this.eventBus.register(this);
+    }
+
+    public void setImportFormatPrefs(ImportFormatPreferences prefs) {
+        this.prefs = prefs;
     }
 
     public void createAndConnect(URI webSocketchannelUri, String projectId, BibDatabaseContext database) {
@@ -115,7 +117,7 @@ public class WebSocketClientWrapper {
     }
 
     @Subscribe
-    public synchronized void listenToSharelatexEntryMessage(ShareLatexEntryMessageEvent event) {
+    public synchronized void listenToSharelatexEntryMessage(ShareLatexContinueMessage event) {
 
         JabRefExecutorService.INSTANCE.executeInterruptableTask(() -> {
             try {
@@ -139,7 +141,7 @@ public class WebSocketClientWrapper {
 
             if (message.contains("2::")) {
                 setLeftDoc(false);
-                eventBus.post(new ShareLatexEntryMessageEvent(Collections.emptyList()));
+                eventBus.post(new ShareLatexContinueMessage());
                 sendHeartBeat();
 
             }
@@ -162,6 +164,8 @@ public class WebSocketClientWrapper {
             }
             if (message.contains("{\"name\":\"connectionAccepted\"}") && (projectId != null)) {
 
+                System.out.println("Joining project");
+                Thread.sleep(200);
                 joinProject(projectId);
 
             }
@@ -180,6 +184,7 @@ public class WebSocketClientWrapper {
                 setLeftDoc(false);
 
                 eventBus.post(new ShareLatexEntryMessageEvent(entries));
+                eventBus.post(new ShareLatexContinueMessage());
 
             }
 
@@ -191,6 +196,9 @@ public class WebSocketClientWrapper {
             }
 
         } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

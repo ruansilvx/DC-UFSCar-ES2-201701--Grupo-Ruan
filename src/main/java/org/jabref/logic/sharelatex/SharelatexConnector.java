@@ -32,7 +32,7 @@ public class SharelatexConnector {
     private String loginUrl;
     private String csrfToken;
     private String projectUrl;
-    private WebSocketClientWrapper client;
+    private final WebSocketClientWrapper client = new WebSocketClientWrapper();
 
     public String connectToServer(String serverUri, String user, String password) throws IOException {
 
@@ -123,7 +123,7 @@ public class SharelatexConnector {
 
             URI webSocketchannelUri = new URIBuilder(socketioUrl + "/websocket/" + channel).setScheme("ws").build();
             System.out.println("WebSocketChannelUrl " + webSocketchannelUri);
-            client = new WebSocketClientWrapper(prefs);
+            client.setImportFormatPrefs(prefs);
             client.createAndConnect(webSocketchannelUri, projectId, database);
 
             setDatabaseName(database);
