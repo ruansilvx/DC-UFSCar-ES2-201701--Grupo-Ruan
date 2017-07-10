@@ -2,6 +2,7 @@ package org.jabref.model.entry;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -400,7 +402,54 @@ public class BibEntry implements Cloneable {
         Objects.requireNonNull(value, "field value must not be null");
 
         String fieldName = toLowerCase(name);
-
+        
+        //  Validacao do ano
+        //      Se o ano for invalido, o substitui pelo ano atual
+        if (fieldName.equals("year")) {
+            int ano = Integer.parseInt(value);
+            int min = 1800;
+            int max = GregorianCalendar.getInstance().get(GregorianCalendar.YEAR);
+            
+            //  Deve ser uma string com 4 caracteres
+            if (value.length() != 4) {
+                return setField("year", Integer.toString(max));
+            }
+            
+            char[] charvalue = value.toCharArray();
+            
+            //  Todos os caracteres devem ser numeros
+            if (!Character.isDigit(charvalue[0]) || !Character.isDigit(charvalue[1]) || !Character.isDigit(charvalue[2]) || !Character.isDigit(charvalue[3])) {
+                return setField("year", Integer.toString(max));
+            }
+            
+            //  O ano deve estar entre 1800 e o ano atual
+            if (ano < min || ano > max) {
+                return setField("year", Integer.toString(max));
+            }
+        }
+        //  Validacao da chave bibtex
+        //      Se a chave for invalida, a substitui por uma string aleatoria
+        if (fieldName.equals("bibtexkey")) {
+            char[] chave = value.toCharArray();
+            //  Se a chave tiver menos que 2 caracteres ou comecar com um numero, ela eh invalida
+            if (value.length() < 2 || Character.isDigit(chave[0])) {
+                
+                //  Cria uma string aleatoria com o prefixo bk (BibtexKey)
+                String aux = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
+                StringBuilder sb = new StringBuilder();
+                Random rnd = new Random();
+                while (sb.length() < 8) {
+                    int indice = (int) (rnd.nextFloat() * aux.length());
+                    sb.append(aux.charAt(indice));
+                }
+                String rndstr = sb.toString();
+                String validBibtexKey = "bk".concat(rndstr);
+                
+                //  Adiciona a string aleatoria
+                return setField("bibtexkey", validBibtexKey);
+            }
+        }
+        
         if (value.isEmpty()) {
             return clearField(fieldName);
         }
