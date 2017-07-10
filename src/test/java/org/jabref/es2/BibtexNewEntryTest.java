@@ -200,7 +200,7 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("article");
         
         be.setField("author", null);
-        Assert.fail();
+        fail();
     }
     
     @Test(expected = NullPointerException.class)
@@ -208,7 +208,7 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("article");
         
         be.setField("title", null);
-        Assert.fail();
+        fail();
     }
     
     @Test(expected = NullPointerException.class)
@@ -216,7 +216,7 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("article");
         
         be.setField("journal", null);
-        Assert.fail();
+        fail();
     }
     
     @Test(expected = NullPointerException.class)
@@ -224,7 +224,7 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("article");
         
         be.setField("year", null);
-        Assert.fail();
+        fail();
     }
     
     @Test(expected = NullPointerException.class)
@@ -232,7 +232,7 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("article");
         
         be.setField("bibtexkey", null);
-        Assert.fail();
+        fail();
     }
     
     //          Livros
@@ -241,7 +241,7 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("book");
         
         be.setField("author", null);
-        Assert.fail();
+        fail();
     }
     
     @Test(expected = NullPointerException.class)
@@ -249,7 +249,7 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("book");
         
         be.setField("title", null);
-        Assert.fail();
+        fail();
     }
     
     @Test(expected = NullPointerException.class)
@@ -257,7 +257,7 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("book");
         
         be.setField("journal", null);
-        Assert.fail();
+        fail();
     }
     
     @Test(expected = NullPointerException.class)
@@ -265,7 +265,7 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("book");
         
         be.setField("year", null);
-        Assert.fail();
+        fail();
     }
     
     @Test(expected = NullPointerException.class)
@@ -273,7 +273,7 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("book");
         
         be.setField("bibtexkey", null);
-        Assert.fail();
+        fail();
     }
     
     @Test(expected = NullPointerException.class)
@@ -281,7 +281,7 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("book");
         
         be.setField("publisher", null);
-        Assert.fail();
+        fail();
     }
     
     @Test(expected = NullPointerException.class)
@@ -289,6 +289,6 @@ public class BibtexNewEntryTest {
         BibEntry be = new BibEntry("book");
         
         be.setField("editor", null);
-        Assert.fail();
+        fail();
     }
 }
