@@ -13,6 +13,7 @@ import org.jabref.model.entry.BibEntry;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 public class BibtexNewEntryTest {
@@ -191,6 +192,70 @@ public class BibtexNewEntryTest {
 
         //        Verifica se a entrada gerada e a entrada esperada são iguais
         assertEquals(stringEsperada, stringGerada);
+    }
+    
+    @Test
+    public void testeAnoInvalidoArtigo() throws IOException {
+        //      Instancia um novo escritor (o escritor cria uma string a partir de um buffer)
+        StringWriter sw = new StringWriter();
+        //        Instancia uma nova entrada
+        BibEntry be = new BibEntry("Article");
+        
+        //        Preenche os campos da entrada
+        //        Campos requeridos
+        be.setField("author", "author_teste");
+        be.setField("title", "title_teste");
+        be.setField("journal", "journal_teste");
+        be.setField("year", "2300");
+        be.setField("bibtexkey", "key_teste");
+        
+        //        Escreve a entrada dada (BibEntry - be) usando o escritor dado (StringWriter - sw)
+        writer.write(be, sw, BibDatabaseMode.BIBTEX);
+        //        String que representa a entrada gerada pelo programa (No caso, o article gerado na forma de uma string)
+        String stringGerada = sw.toString();
+        
+        //      String que representa a saída esperada (formato pode ser visto na aba BibTex source)
+        
+        String stringEsperada = OS.NEWLINE + "@Article{key_teste," + OS.NEWLINE +
+        "  author  = {author_teste}," + OS.NEWLINE +
+        "  title   = {title_teste}," + OS.NEWLINE +
+        "  journal = {journal_teste}," + OS.NEWLINE +
+        "}" + OS.NEWLINE;
+        //        Verifica se a entrada gerada e a entrada esperada são iguais
+        assertEquals(stringEsperada, stringGerada);
+    }
+    
+    @Test
+    public void testeBibtexKeyInvalidaArtigo() throws IOException {
+        //      Instancia um novo escritor (o escritor cria uma string a partir de um buffer)
+        StringWriter sw = new StringWriter();
+        //        Instancia uma nova entrada
+        BibEntry be = new BibEntry("Article");
+        
+        //        Preenche os campos da entrada
+        //        Campos requeridos
+        be.setField("author", "author_teste");
+        be.setField("title", "title_teste");
+        be.setField("journal", "journal_teste");
+        be.setField("year", "2017");
+        be.setField("bibtexkey", "a");
+        
+        //        Escreve a entrada dada (BibEntry - be) usando o escritor dado (StringWriter - sw)
+        writer.write(be, sw, BibDatabaseMode.BIBTEX);
+        //        String que representa a entrada gerada pelo programa (No caso, o article gerado na forma de uma string)
+        String stringGerada = sw.toString();
+        
+        //      String que representa a saída esperada (formato pode ser visto na aba BibTex source)
+        
+        String stringEsperada = OS.NEWLINE + "@Article{," + OS.NEWLINE + //    A BibtexKey vai ser trocada por uma string aleatoria
+        "  author  = {author_teste}," + OS.NEWLINE +
+        "  title   = {title_teste}," + OS.NEWLINE +
+        "  journal = {journal_teste}," + OS.NEWLINE +
+        "  year    = {2017}," + OS.NEWLINE +
+        "}" + OS.NEWLINE;
+        //        Verifica se a entrada gerada e a entrada esperada são iguais
+        assertEquals(stringEsperada, stringGerada);
+        //assertEquals(stringEsperada, stringGerada);
     }
     
     //      Testes de Null Pointer Exception
