@@ -9,6 +9,7 @@ import org.jabref.logic.bibtex.LatexFieldFormatterPreferences;
 import org.jabref.logic.util.OS;
 import org.jabref.model.database.BibDatabaseMode;
 import org.jabref.model.entry.BibEntry;
+import org.jabref.model.entry.Month;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -57,12 +58,12 @@ public class BibtexNewEntryTest {
         be.setField("title", "title_teste");
         be.setField("journal", "journal_teste");
         be.setField("year", "2017");
-        be.setField("bibtexkey", "key_teste");
+        be.setCiteKey("key_teste");
         //        Campos opcionais
         be.setField("volume", "1");
         be.setField("number", "1");
         be.setField("pages", "1");
-        be.setField("month", "jan");
+        be.setMonth(Month.getMonthByNumber(1).get());
         be.setField("issn", "1");
         be.setField("note", "note_teste");
         be.setField("crossref", "crossref_teste");
@@ -90,7 +91,7 @@ public class BibtexNewEntryTest {
                 "  volume    = {1}," + OS.NEWLINE +
                 "  number    = {1}," + OS.NEWLINE +
                 "  pages     = {1}," + OS.NEWLINE +
-                "  month     = {jan}," + OS.NEWLINE +
+                "  month     = jan," + OS.NEWLINE +
                 "  issn      = {1}," + OS.NEWLINE +
                 "  note      = {note_teste}," + OS.NEWLINE +
                 "  abstract  = {abstract_test}," + OS.NEWLINE +
@@ -139,14 +140,14 @@ public class BibtexNewEntryTest {
         be.setField("year", "2017");
         be.setField("author", "author_teste");
         be.setField("editor", "editor_teste");
-        be.setField("bibtexkey", "key_teste");
+        be.setCiteKey("key_teste");
         //        Campos opcionais
         be.setField("volume", "1");
         be.setField("number", "1");
         be.setField("series", "1");
         be.setField("adress", "adress_teste");
         be.setField("edition", "1");
-        be.setField("month", "jan");
+        be.setMonth(Month.getMonthByNumber(1).get());
         be.setField("isbn", "1");
         be.setField("note", "note_teste");
         be.setField("crossref", "crossref_teste");
@@ -175,7 +176,7 @@ public class BibtexNewEntryTest {
                 "  number    = {1}," + OS.NEWLINE +
                 "  series    = {1}," + OS.NEWLINE +
                 "  edition   = {1}," + OS.NEWLINE +
-                "  month     = {jan}," + OS.NEWLINE +
+                "  month     = jan," + OS.NEWLINE +
                 "  isbn      = {1}," + OS.NEWLINE +
                 "  note      = {note_teste}," + OS.NEWLINE +
                 "  abstract  = {abstract_test}," + OS.NEWLINE +
@@ -193,7 +194,7 @@ public class BibtexNewEntryTest {
         //        Verifica se a entrada gerada e a entrada esperada são iguais
         assertEquals(stringEsperada, stringGerada);
     }
-    
+
     @Test
     public void testeAnoInvalidoArtigo() throws IOException {
         //      Instancia um novo escritor (o escritor cria uma string a partir de um buffer)
@@ -257,102 +258,102 @@ public class BibtexNewEntryTest {
         assertEquals(stringEsperada, stringGerada);
         //assertEquals(stringEsperada, stringGerada);
     }
-    
+  
     //      Testes de Null Pointer Exception
     //          Artigos
     @Test(expected = NullPointerException.class)
     public void testAuthorNullArticle() {
         BibEntry be = new BibEntry("article");
-        
+
         be.setField("author", null);
         fail();
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void testTitleNullArticle() {
         BibEntry be = new BibEntry("article");
-        
+
         be.setField("title", null);
         fail();
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void testJournalNullArticle() {
         BibEntry be = new BibEntry("article");
-        
+
         be.setField("journal", null);
         fail();
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void testYearNullArticle() {
         BibEntry be = new BibEntry("article");
-        
+
         be.setField("year", null);
         fail();
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void testKeyNullArticle() {
         BibEntry be = new BibEntry("article");
-        
-        be.setField("bibtexkey", null);
+
+        be.setCiteKey(null);
         fail();
     }
-    
+
     //          Livros
     @Test(expected = NullPointerException.class)
     public void testAuthorNullBook() {
         BibEntry be = new BibEntry("book");
-        
+
         be.setField("author", null);
         fail();
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void testTitleNullBook() {
         BibEntry be = new BibEntry("book");
-        
+
         be.setField("title", null);
         fail();
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void testJournalNullBook() {
         BibEntry be = new BibEntry("book");
-        
+
         be.setField("journal", null);
         fail();
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void testYearNullBook() {
         BibEntry be = new BibEntry("book");
-        
+
         be.setField("year", null);
         fail();
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void testKeyNullBook() {
         BibEntry be = new BibEntry("book");
-        
-        be.setField("bibtexkey", null);
+
+        be.setCiteKey(null);
         fail();
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void testPublisherNullBook() {
         BibEntry be = new BibEntry("book");
-        
+
         be.setField("publisher", null);
         fail();
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void testEditorNullBook() {
         BibEntry be = new BibEntry("book");
-        
+
         be.setField("editor", null);
         fail();
     }
