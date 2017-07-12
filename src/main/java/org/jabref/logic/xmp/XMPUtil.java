@@ -1049,7 +1049,7 @@ public class XMPUtil {
             LOGGER.info("Encryption not supported by XMPUtil");
             return false;
         } catch (IOException e) {
-            LOGGER.error("XMP reading failed", e);
+            //LOGGER.error("XMP reading failed", e);
             return false;
         }
     }

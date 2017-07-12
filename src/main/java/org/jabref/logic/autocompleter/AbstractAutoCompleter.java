@@ -14,6 +14,7 @@ import java.util.TreeSet;
 import org.jabref.logic.layout.format.LatexToUnicodeFormatter;
 import org.apache.commons.collections.IteratorUtils;;
 
+
 /**
  * Delivers possible completions for a given string.
  *
@@ -58,7 +59,7 @@ public abstract class AbstractAutoCompleter implements AutoCompleter<String> {
         if (isTooShortToComplete(toComplete)) {
             return new ArrayList<>();
         }
-        
+
         String lowerCase = toComplete.toLowerCase(Locale.ROOT);
 
         if (lowerCase.equals(toComplete)) {
@@ -70,8 +71,8 @@ public abstract class AbstractAutoCompleter implements AutoCompleter<String> {
             // we have to to determine possible strings for each hit
             List<String> result = new ArrayList<>();
             
-            // Adicionada lista auxiliar para eliminar sub-ocorrências de strings
-            // e, portanto, suas repetições na lista do autocomplete.
+            // Adicionada lista auxiliar para eliminar sub-ocorrÃªncias de strings
+            // e, portanto, suas repetiÃ§Ãµes na lista do autocomplete.
             List<String> aux = new ArrayList<>();
             aux = result;	//Ela recebe as mesmas strings de result.
             
@@ -79,7 +80,7 @@ public abstract class AbstractAutoCompleter implements AutoCompleter<String> {
                 result.addAll(possibleStringsForSearchString.get(s));
             }
             
-            // Laço que percorre as listas comparando-as e checando se existem substrings
+            // LaÃ§o que percorre as listas comparando-as e checando se existem substrings
             // a serem eliminadas.
         	for(int i = 0; i < result.size(); i++)
     			for(int j = 0; j < aux.size(); j++)
