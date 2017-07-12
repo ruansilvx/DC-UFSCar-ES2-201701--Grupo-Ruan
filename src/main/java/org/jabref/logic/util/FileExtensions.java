@@ -33,6 +33,7 @@ public enum FileExtensions {
     RIS(Localization.lang("%0 file", "RIS"), "ris"),
     SILVER_PLATTER(Localization.lang("%0 file", "SilverPlatter"), "dat", "txt"),
     XMP(Localization.lang("XMP-annotated PDF"), "pdf"),
+    XLSX(Localization.lang("Excel File"), "xlsx"),
 
     AUX(Localization.lang("%0 file", "AUX"), "aux"),
     JSTYLE(Localization.lang("Style file"), "jstyle"),

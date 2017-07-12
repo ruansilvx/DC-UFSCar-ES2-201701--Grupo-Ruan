@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.jabref.logic.layout.format.LatexToUnicodeFormatter;
+import org.jabref.logic.layout.format.LatexToUnicodeFormatter;;
 
 /**
  * Delivers possible completions for a given string.
@@ -56,6 +56,7 @@ public abstract class AbstractAutoCompleter implements AutoCompleter<String> {
         if (isTooShortToComplete(toComplete)) {
             return new ArrayList<>();
         }
+
         String lowerCase = toComplete.toLowerCase(Locale.ROOT);
 
         if (lowerCase.equals(toComplete)) {
@@ -66,16 +67,48 @@ public abstract class AbstractAutoCompleter implements AutoCompleter<String> {
             // As subset only contains lower case strings,
             // we have to to determine possible strings for each hit
             List<String> result = new ArrayList<>();
+
+            // Adicionada lista auxiliar para eliminar sub-ocorrências de strings
+            // e, portanto, suas repetições na lista do autocomplete.
+            List<String> aux = new ArrayList<>();
+            aux = result; //Ela recebe as mesmas strings de result.
+
             for (String s : subset) {
                 result.addAll(possibleStringsForSearchString.get(s));
             }
+
+            // Laço que percorre as listas comparando-as e checando se existem substrings
+            // a serem eliminadas.
+            for (int i = 0; i < result.size(); i++) {
+                for (int j = 0; j < aux.size(); j++) {
+                    if (aux.get(j).contains(result.get(i)) && !aux.get(j).equals(result.get(i))) {
+                        result.remove(i);
+                        j--;
+                    }
+                }
+            }
+
             return result;
         } else {
             // user typed in a mix of upper case and lower case,
             // we assume user wants to have exact search
             String ender = AbstractAutoCompleter.incrementLastCharacter(toComplete);
             SortedSet<String> subset = indexCaseSensitive.subSet(toComplete, ender);
-            return new ArrayList<>(subset);
+
+            List<String> result = new ArrayList<>(subset);
+            List<String> aux = new ArrayList<>();
+            aux = result;
+
+            for (int i = 0; i < result.size(); i++) {
+                for (int j = 0; j < aux.size(); j++) {
+                    if (aux.get(j).contains(result.get(i)) && !aux.get(j).equals(result.get(i))) {
+                        result.remove(i);
+                        j--;
+                    }
+                }
+            }
+
+            return result;
         }
     }
 

@@ -27,6 +27,7 @@ import org.jabref.logic.importer.fileformat.PdfXmpImporter;
 import org.jabref.logic.importer.fileformat.RepecNepImporter;
 import org.jabref.logic.importer.fileformat.RisImporter;
 import org.jabref.logic.importer.fileformat.SilverPlatterImporter;
+import org.jabref.logic.importer.fileformat.XlsxImporter;
 import org.jabref.logic.l10n.Localization;
 import org.jabref.logic.xmp.XMPPreferences;
 import org.jabref.model.database.BibDatabases;
@@ -68,6 +69,7 @@ public class ImportFormatReader {
         formats.add(new RepecNepImporter(importFormatPreferences));
         formats.add(new RisImporter());
         formats.add(new SilverPlatterImporter());
+        formats.add(new XlsxImporter());
 
         // Get custom import formats
         for (CustomImporter importer : importFormatPreferences.getCustomImportList()) {
@@ -186,6 +188,7 @@ public class ImportFormatReader {
         // Cycle through all importers:
         for (Importer imFo : getImportFormats()) {
             try {
+
                 if (!imFo.isRecognizedFormat(filePath, importFormatPreferences.getEncoding())) {
                     continue;
                 }
