@@ -180,7 +180,9 @@ public class ImportInspectionDialog extends JabRefDialog implements ImportInspec
     private BasePanel panel;
     private boolean generatedKeys; // Set to true after keys have been generated.
     private boolean defaultSelected = true;
-
+    //    Criada exclusivamente para criar uma nova database caso requerido no caso de duplicatas
+    //    Veja mais nos métodos updateGUI e addSeletedEntries abaixo
+    private boolean newDatabaseDuplicates;
 
     /**
      * Creates a dialog that displays the given list of fields in the table. The
@@ -197,6 +199,9 @@ public class ImportInspectionDialog extends JabRefDialog implements ImportInspec
         this.bibDatabaseContext = (panel == null) ? null : panel.getBibDatabaseContext();
         this.undoName = undoName;
         this.newDatabase = newDatabase;
+
+        newDatabaseDuplicates = newDatabase;
+
         setIconImages(IconTheme.getLogoSet());
         preview = new PreviewPanel(panel, bibDatabaseContext);
 
@@ -744,12 +749,28 @@ public class ImportInspectionDialog extends JabRefDialog implements ImportInspec
                         if (answer == JOptionPane.NO_OPTION) {
                             return;
                         }
+
+                        //           Cria caixa de dialogo para adicionar ou não as duplicatas em uma nova database
+                        CheckBoxMessage cbmNew = new CheckBoxMessage(
+                                Localization
+                                        .lang("Add duplicates into new database?"),
+                                Localization.lang("Disable this confirmation dialog"), false);
+                        int answerNew = JOptionPane.showConfirmDialog(ImportInspectionDialog.this, cbmNew,
+                                Localization.lang("New Database"), JOptionPane.YES_NO_OPTION);
+                        if (cbm.isSelected()) {
+                            Globals.prefs.putBoolean(JabRefPreferences.WARN_ABOUT_DUPLICATES_IN_INSPECTION, false);
+                        }
+                        //            Se o a opção YES for escolhida, newDatabaseDuplicates é atribuida true para que uma nova database seja criada
+                        if (answerNew == JOptionPane.YES_OPTION) {
+                            newDatabaseDuplicates = true;
+                        }
+
                         break;
                     }
                 }
             }
 
-            // The compund undo action used to contain all changes made by this
+            // The compound undo action used to contain all changes made by this
             // dialog.
             NamedCompound ce = new NamedCompound(undoName);
 
@@ -777,7 +798,7 @@ public class ImportInspectionDialog extends JabRefDialog implements ImportInspec
         }
 
         private void updateGUI(int entryCount) {
-            if (newDatabase) {
+            if (newDatabaseDuplicates) {
                 frame.addTab(panel, true);
             }
             panel.markBaseChanged();
@@ -797,7 +818,7 @@ public class ImportInspectionDialog extends JabRefDialog implements ImportInspec
         }
 
         private void addSelectedEntries(NamedCompound ce, final List<BibEntry> selected) {
-            if (newDatabase) {
+            if (newDatabaseDuplicates) {
                 // Create a new BasePanel for the entries:
                 Defaults defaults = new Defaults(Globals.prefs.getDefaultBibDatabaseMode());
                 panel = new BasePanel(frame, new BibDatabaseContext(defaults));
