@@ -14,7 +14,6 @@ import org.jabref.model.entry.Month;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 public class BibtexNewEntryTest {

@@ -150,6 +150,10 @@ dependencies {
     testCompile 'com.github.tomakehurst:wiremock:2.6.0'
     testCompile 'org.assertj:assertj-swing-junit:3.6.0'
     testCompile 'org.reflections:reflections:0.9.11'
+    
+    compile 'org.apache.poi:poi:3.16'
+    compile 'org.apache.poi:poi-ooxml:3.16'
+    compile 'org.apache.poi:poi-ooxml-schemas:3.16'   
 }
 
 sourceSets {
